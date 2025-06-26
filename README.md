@@ -27,7 +27,7 @@ sign_language/
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository-url>
+https://github.com/yuvidewan/sign-language.git
 cd sign_language
 ```
 
