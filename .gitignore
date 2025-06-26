@@ -6,6 +6,8 @@ ENV/
 .env/
 virtualenv/
 .venv/
+lip_reader_env/
+data/
 
 # Python
 __pycache__/
@@ -29,6 +31,7 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+Scripts/
 
 # PyTorch
 *.pth

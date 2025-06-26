@@ -1,156 +1,111 @@
-# Lip Reading AI System
+# Lip Reading System
 
-A deep learning-based system that converts lip movements to text using computer vision and sequence modeling.
+A modern deep learning pipeline for visual speech recognition (lip reading) using the [GRID Audio-Visual Speech Corpus](https://spandh.dcs.shef.ac.uk/gridcorpus/).
+
+---
 
 ## Features
+- **Direct training from GRID dataset**: No need for manual preprocessing or metadata files.
+- **PyTorch-based**: Modular, extensible, and GPU-ready.
+- **Supports multiple speakers**: Easily add more data for better generalization.
+- **Modern model**: CNN + LSTM + Attention for robust sequence modeling.
 
-- **Real-time lip detection** using MediaPipe and OpenCV
-- **Deep learning model** combining CNN for feature extraction and LSTM for sequence modeling
-- **Training pipeline** for custom datasets
-- **Real-time inference** from video input
-- **Silent speech recognition** - converts lip movements to text without audio
+---
 
-## Project Structure
+## 1. Setup
 
-```
-sign_language/
-├── data/                   # Training data and datasets
-├── models/                 # Model definitions and saved models
-├── utils/                  # Utility functions
-├── training/               # Training scripts
-├── inference/              # Real-time inference
-├── preprocessing/          # Data preprocessing tools
-└── notebooks/              # Jupyter notebooks for experimentation
-```
-
-## Installation
-
-### 1. Clone the Repository
+### 1.1. Clone and Install Dependencies
 ```bash
-https://github.com/yuvidewan/sign-language.git
-cd sign_language
-```
+# Clone the repo
+https://github.com/yourusername/lip-reading.git
+cd lip-reading
 
-### 2. Set Up Virtual Environment
-
-**Option A: Using venv (Recommended)**
-```bash
-# Create virtual environment
-python -m venv lip_reader_env
-
-# Activate virtual environment
-# On Windows:
-lip_reader_env\Scripts\activate
-# On macOS/Linux:
-source lip_reader_env/bin/activate
-```
-
-**Option B: Using conda**
-```bash
-# Create conda environment
-conda create -n lip_reader_env python=3.9
-conda activate lip_reader_env
-```
-
-### 3. Install Dependencies
-```bash
-# Install required packages
+# Install Python dependencies
 pip install -r requirements.txt
 ```
 
-### 4. Verify Installation
-```bash
-# Run system tests
-python test_system.py
+### 1.2. Download the GRID Corpus
+- Request access and download from: [GRID Corpus](https://spandh.dcs.shef.ac.uk/gridcorpus/)
+- Extract the dataset to: `data/GRID/`
+
+Your folder should look like:
+```
+data/
+  GRID/
+    s1/
+      video/
+        *.mpg
+      align/
+        *.align
+    s2/
+      ...
 ```
 
-## Usage
+---
 
-### Training
+## 2. Training
+
+### 2.1. Basic Training Command
+Train on a single speaker (e.g., `s1`):
 ```bash
-python training/train_lip_reader.py --data_path data/dataset --epochs 100
+python -m training.train_lip_reader --data_path data/GRID --epochs 10 --batch_size 4 --device cuda --train_speakers s1
 ```
 
-### Real-time Inference
-```bash
-python inference/real_time_lip_reader.py
-```
+- **Add more speakers**: `--train_speakers s1 s2 s3`
+- **Validation**: By default, a split of the training data is used. To use a separate speaker for validation:
+  ```bash
+  python training/train_lip_reader.py --data_path data/GRID --train_speakers s1 --val_speakers s2
+  ```
+- **Best model** is saved as `best_lip_reader_model.pth`.
 
-### Preprocessing Data
-```bash
-python preprocessing/extract_lip_sequences.py --video_path data/videos --output_path data/processed
-```
+### 2.2. Arguments
+- `--data_path`: Path to GRID data (default: `data/GRID`)
+- `--epochs`: Number of training epochs
+- `--batch_size`: Batch size
+- `--device`: `cuda` or `cpu`
+- `--train_speakers`: List of speakers for training (e.g., `s1 s2`)
+- `--val_speakers`: List of speakers for validation (optional)
 
-### Interactive Demo
-```bash
-python demo_lip_reader.py
-```
+---
 
-## Model Architecture
+## 3. Data Loading
+- The code uses `GRIDDdataset` to read videos and transcripts directly from the GRID folder structure.
+- No need for metadata files or preprocessing scripts.
+- Transcripts are automatically extracted from `.align` files.
 
-- **CNN Encoder**: Extracts spatial features from lip regions
-- **LSTM Decoder**: Processes temporal sequences
-- **Attention Mechanism**: Focuses on relevant lip movements
-- **CTC Loss**: Handles alignment between lip movements and text
+---
 
-## Dataset Requirements
+## 4. Adding More Data
+- Download and extract more speakers into `data/GRID/`.
+- Add their names to `--train_speakers` or `--val_speakers` as needed.
 
-- Videos with clear lip movements
-- Corresponding text transcripts
-- Multiple speakers for robustness
-- Various lighting conditions
+---
 
-## Performance
+## 5. Model
+- Model architecture: CNN (spatial) + LSTM (temporal) + Attention.
+- Vocabulary is automatically set using `TextProcessor`.
+- Loss: CTC (Connectionist Temporal Classification).
 
-- Real-time processing at 30 FPS
-- Accuracy varies by dataset quality
-- Works best with clear, front-facing video
+---
 
-## Troubleshooting
+## 6. Troubleshooting
+- **CUDA out of memory**: Lower `--batch_size` or use `--device cpu`.
+- **No data found**: Check your `data/GRID` structure and speaker names.
+- **Training is slow**: Use a GPU if available, or reduce sequence length/batch size.
 
-### Common Issues
+---
 
-1. **MediaPipe Installation Issues**
-   ```bash
-   pip install mediapipe --upgrade
-   ```
+## 7. Inference & Evaluation
+- (Coming soon) Scripts for real-time inference and evaluation.
+- For now, use the saved model weights for your own inference pipeline.
 
-2. **CUDA/GPU Issues**
-   ```bash
-   # Install CPU-only PyTorch if GPU not available
-   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-   ```
+---
 
-3. **Webcam Access Issues**
-   - Ensure webcam permissions are granted
-   - Try different camera indices (0, 1, 2)
+## 8. Credits
+- GRID Audio-Visual Speech Corpus: [http://spandh.dcs.shef.ac.uk/gridcorpus/](http://spandh.dcs.shef.ac.uk/gridcorpus/)
+- Model and code: [Your Name/Team]
 
-### Virtual Environment Management
+---
 
-**Deactivating the environment:**
-```bash
-deactivate  # For venv
-conda deactivate  # For conda
-```
-
-**Removing the environment:**
-```bash
-# For venv
-rm -rf lip_reader_env  # On macOS/Linux
-rmdir /s lip_reader_env  # On Windows
-
-# For conda
-conda env remove -n lip_reader_env
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
+## 9. License
+MIT License 
