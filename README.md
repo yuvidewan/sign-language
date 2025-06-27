@@ -13,12 +13,11 @@ A modern deep learning pipeline for visual speech recognition (lip reading) usin
 ---
 
 ## 1. Setup
-#hiiiiiiii
 ### 1.1. Clone and Install Dependencies
 ```bash
 # Clone the repo
-https://github.com/yourusername/lip-reading.git
-cd lip-reading
+https://github.com/yuvidewan/sign-language.git
+cd sign-language
 
 # Install Python dependencies
 pip install -r requirements.txt
