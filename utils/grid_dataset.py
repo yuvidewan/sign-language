@@ -2,7 +2,6 @@ import os
 import cv2
 import torch
 from torch.utils.data import Dataset
-from torchvision import transforms
 
 class GRIDDdataset(Dataset):
     """
@@ -10,10 +9,11 @@ class GRIDDdataset(Dataset):
     Expects directory structure: root/speaker/video/vid1.mpg and root/speaker/align/vid1.align
     Returns (video_frames, transcript) for each sample.
     """
-    def __init__(self, root_dir, speakers=None, transform=None, frames_per_clip=75):
+    def __init__(self, root_dir, speakers=None, transform=None, frames_per_clip=75, target_size=(64, 64)):
         self.root_dir = root_dir
         self.transform = transform
         self.frames_per_clip = frames_per_clip
+        self.target_size = target_size
         self.samples = []
         self._prepare_dataset(speakers)
 
@@ -53,6 +53,8 @@ class GRIDDdataset(Dataset):
             if not ret:
                 break
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # Resize frame to target size
+            frame = cv2.resize(frame, self.target_size)
             frames.append(torch.from_numpy(frame).permute(2, 0, 1).float() / 255.0)
             count += 1
             if count >= self.frames_per_clip:
