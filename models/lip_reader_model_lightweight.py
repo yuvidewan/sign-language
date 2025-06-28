@@ -31,7 +31,7 @@ class LightweightLipReaderModel(nn.Module):
         # We'll calculate the CNN output size dynamically
         self.cnn_output_size = None
         
-        # Create a placeholder fc1 layer (will be replaced after first forward pass)
+        # Create a placeholder fc1 layer (will be replaced after first forward pass or when loading weights)
         self.fc1 = nn.Linear(1, hidden_size)  # Placeholder
         
         # Single layer LSTM for temporal modeling
@@ -147,6 +147,19 @@ class LightweightLipReaderModel(nn.Module):
             predictions = torch.argmax(probs, dim=-1)
             
         return predictions
+    
+    def load_state_dict(self, state_dict, strict=True):
+        """Override load_state_dict to handle dynamic fc1 layer"""
+        # Check if fc1.weight exists in state_dict and get its input size
+        if 'fc1.weight' in state_dict:
+            fc1_input_size = state_dict['fc1.weight'].shape[1]
+            # Create fc1 with the correct size
+            self.fc1 = nn.Linear(fc1_input_size, self.hidden_size)
+            self.cnn_output_size = fc1_input_size
+            print(f"Created fc1 layer with input size: {fc1_input_size}")
+        
+        # Call parent load_state_dict
+        return super().load_state_dict(state_dict, strict)
 
 
 class LipReaderLoss(nn.Module):

@@ -149,11 +149,11 @@ class TextProcessor:
         text = self.preprocess_text(text)
         
         if add_special_tokens:
-            text = f"{self.SOS_TOKEN} {text} {self.EOS_TOKEN}"
+            text = f"{self.SOS_TOKEN}{text}{self.EOS_TOKEN}"
         
-        # Convert characters to indices
+        # Convert characters to indices (character by character, not word by word)
         indices = []
-        for char in text.split():
+        for char in text:
             if char in self.char_to_idx:
                 indices.append(self.char_to_idx[char])
             else:
@@ -178,7 +178,7 @@ class TextProcessor:
                 token = self.idx_to_char[idx]
                 tokens.append(token)
         
-        text = ' '.join(tokens)
+        text = ''.join(tokens)  # Join characters directly, not with spaces
         
         if remove_special_tokens:
             # Remove special tokens

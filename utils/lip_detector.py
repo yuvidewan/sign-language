@@ -43,47 +43,68 @@ class LipDetector:
         Returns:
             Cropped lip region or None if not detected
         """
-        # Convert BGR to RGB
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        
-        # Detect face landmarks
-        results = self.face_mesh.process(rgb_frame)
-        
-        if not results.multi_face_landmarks:
+        try:
+            # Convert BGR to RGB
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            
+            # Detect face landmarks
+            results = self.face_mesh.process(rgb_frame)
+            
+            if not results.multi_face_landmarks:
+                return None
+            
+            # Get the first face
+            face_landmarks = results.multi_face_landmarks[0]
+            
+            # Extract lip landmarks
+            lip_points = []
+            height, width = frame.shape[:2]
+            
+            for landmark_id in self.outer_lip_landmarks:
+                landmark = face_landmarks.landmark[landmark_id]
+                x = int(landmark.x * width)
+                y = int(landmark.y * height)
+                lip_points.append([x, y])
+            
+            # Ensure we have enough points
+            if len(lip_points) < 3:
+                return None
+            
+            lip_points = np.array(lip_points, dtype=np.int32)
+            
+            # Ensure points are valid
+            if lip_points.size == 0:
+                return None
+            
+            # Get bounding box with padding
+            try:
+                x, y, w, h = cv2.boundingRect(lip_points)
+            except cv2.error as e:
+                print(f"OpenCV error in boundingRect: {e}")
+                return None
+            
+            # Add padding to include more context
+            padding = 20
+            x = max(0, x - padding)
+            y = max(0, y - padding)
+            w = min(width - x, w + 2 * padding)
+            h = min(height - y, h + 2 * padding)
+            
+            # Ensure valid dimensions
+            if w <= 0 or h <= 0:
+                return None
+            
+            # Crop lip region
+            lip_region = frame[y:y+h, x:x+w]
+            
+            if lip_region.size == 0:
+                return None
+            
+            return lip_region
+            
+        except Exception as e:
+            print(f"Error in lip detection: {e}")
             return None
-        
-        # Get the first face
-        face_landmarks = results.multi_face_landmarks[0]
-        
-        # Extract lip landmarks
-        lip_points = []
-        height, width = frame.shape[:2]
-        
-        for landmark_id in self.outer_lip_landmarks:
-            landmark = face_landmarks.landmark[landmark_id]
-            x = int(landmark.x * width)
-            y = int(landmark.y * height)
-            lip_points.append([x, y])
-        
-        lip_points = np.array(lip_points, dtype=np.int32)
-        
-        # Get bounding box with padding
-        x, y, w, h = cv2.boundingRect(lip_points)
-        
-        # Add padding to include more context
-        padding = 20
-        x = max(0, x - padding)
-        y = max(0, y - padding)
-        w = min(width - x, w + 2 * padding)
-        h = min(height - y, h + 2 * padding)
-        
-        # Crop lip region
-        lip_region = frame[y:y+h, x:x+w]
-        
-        if lip_region.size == 0:
-            return None
-        
-        return lip_region
     
     def extract_lip_landmarks(self, frame: np.ndarray) -> Optional[List[Tuple[int, int]]]:
         """
@@ -93,23 +114,28 @@ class LipDetector:
         Returns:
             List of (x, y) coordinates or None
         """
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self.face_mesh.process(rgb_frame)
-        
-        if not results.multi_face_landmarks:
+        try:
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = self.face_mesh.process(rgb_frame)
+            
+            if not results.multi_face_landmarks:
+                return None
+            
+            face_landmarks = results.multi_face_landmarks[0]
+            height, width = frame.shape[:2]
+            
+            landmarks = []
+            for landmark_id in self.lip_landmarks:
+                landmark = face_landmarks.landmark[landmark_id]
+                x = int(landmark.x * width)
+                y = int(landmark.y * height)
+                landmarks.append((x, y))
+            
+            return landmarks
+            
+        except Exception as e:
+            print(f"Error extracting lip landmarks: {e}")
             return None
-        
-        face_landmarks = results.multi_face_landmarks[0]
-        height, width = frame.shape[:2]
-        
-        landmarks = []
-        for landmark_id in self.lip_landmarks:
-            landmark = face_landmarks.landmark[landmark_id]
-            x = int(landmark.x * width)
-            y = int(landmark.y * height)
-            landmarks.append((x, y))
-        
-        return landmarks
     
     def draw_lip_landmarks(self, frame: np.ndarray, landmarks: List[Tuple[int, int]]) -> np.ndarray:
         """
